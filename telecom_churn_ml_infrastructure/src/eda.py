@@ -395,3 +395,33 @@ def plot_categorical_distributions(
 
         plt.tight_layout()
         plt.show()
+
+
+# ============================================================
+# 14. MATRICE CORRÉLATION
+# ============================================================
+
+def plot_correlation_matrix(
+    df,
+    numeric_columns
+):
+    # كنحسبو correlation
+    correlation = df[numeric_columns].corr()
+
+    plt.figure(figsize=(10, 7))
+
+    sns.heatmap(
+        correlation,
+        annot=True,
+        cmap="coolwarm",
+        fmt=".2f"
+    )
+
+    plt.title(
+        "Matrice de corrélation"
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+    return correlation
