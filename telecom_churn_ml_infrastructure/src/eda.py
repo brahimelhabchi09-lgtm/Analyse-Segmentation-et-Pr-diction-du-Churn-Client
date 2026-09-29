@@ -250,3 +250,33 @@ def show_column_types(df):
     print(categorical_columns)
 
     return numeric_columns, categorical_columns
+
+
+# ============================================================
+# 10. DISTRIBUTION VARIABLES NUMÉRIQUES
+# ============================================================
+
+def plot_numeric_distributions(
+    df,
+    numeric_columns
+):
+    # كنرسمو distribution ديال كل variable numérique
+    for column in numeric_columns:
+
+        plt.figure(figsize=(8, 5))
+
+        sns.histplot(
+            data=df,
+            x=column,
+            kde=True
+        )
+
+        plt.title(
+            f"Distribution de {column}"
+        )
+
+        plt.xlabel(column)
+        plt.ylabel("Fréquence")
+
+        plt.tight_layout()
+        plt.show()
