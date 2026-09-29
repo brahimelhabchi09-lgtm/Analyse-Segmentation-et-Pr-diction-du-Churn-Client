@@ -148,3 +148,37 @@ def plot_missing_values(df, save_path=None):
         plt.savefig(save_path)
 
     plt.show()
+
+
+# ============================================================
+# 6. DOUBLONS
+# ============================================================
+
+def check_duplicates(df):
+    # كنشوفو واش كاينين lignes مكررين
+    duplicates = df.duplicated().sum()
+
+    print("\n===== DOUBLONS =====")
+    print(f"Nombre de doublons : {duplicates}")
+
+    return duplicates
+
+
+def remove_duplicates(df):
+    # كنحسبو الحجم قبل الحذف
+    before = len(df)
+
+    # كنحيدو doublons
+    df = df.drop_duplicates()
+
+    # كنعاودو نرتبو index
+    df = df.reset_index(drop=True)
+
+    # الحجم من بعد الحذف
+    after = len(df)
+
+    print(f"Lignes avant : {before}")
+    print(f"Lignes après : {after}")
+    print(f"Doublons supprimés : {before - after}")
+
+    return df
