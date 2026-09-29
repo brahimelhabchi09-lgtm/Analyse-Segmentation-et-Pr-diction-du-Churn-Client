@@ -19,3 +19,21 @@ def load_data(file_path):
     print(f"Nombre de colonnes : {df.shape[1]}")
 
     return df
+
+
+# ============================================================
+# 2. NETTOYAGE DES TYPES
+# ============================================================
+
+def convert_data_types(df):
+    # TotalCharges خاصها تكون numérique
+    # ولكن فـ raw data جاية object
+    df["TotalCharges"] = pd.to_numeric(
+        df["TotalCharges"],
+        errors="coerce"
+    )
+
+    print("\n===== TYPES APRÈS CONVERSION =====")
+    print(df.dtypes)
+
+    return df
