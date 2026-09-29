@@ -425,3 +425,53 @@ def plot_correlation_matrix(
     plt.show()
 
     return correlation
+
+
+# ============================================================
+# 15. ANALYSE CHURN
+# ============================================================
+
+def analyze_target(
+    df,
+    target="Churn"
+):
+    # Churn هي target ديال classification
+    print(
+        f"\n===== TARGET : {target} ====="
+    )
+
+    # عدد clients فكل classe
+    print("\nNombre par classe :")
+
+    print(
+        df[target].value_counts()
+    )
+
+    # النسبة المئوية لكل classe
+    print("\nPourcentage par classe :")
+
+    print(
+        (
+            df[target]
+            .value_counts(
+                normalize=True
+            ) * 100
+        ).round(2)
+    )
+
+    # كنرسمو distribution
+    plt.figure(figsize=(7, 5))
+
+    sns.countplot(
+        data=df,
+        x=target
+    )
+
+    plt.title(
+        "Distribution du Churn"
+    )
+
+    plt.xlabel("Churn")
+    plt.ylabel("Nombre de clients")
+
+    plt.show()
