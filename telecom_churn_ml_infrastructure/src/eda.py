@@ -507,3 +507,54 @@ def analyze_numeric_vs_target(
 
         plt.tight_layout()
         plt.show()
+
+
+# ============================================================
+# 17. VARIABLES CATÉGORIELLES VS CHURN
+# ============================================================
+
+def analyze_categorical_vs_target(
+    df,
+    categorical_columns,
+    target="Churn"
+):
+    # كنقارن كل variable catégorielle مع Churn
+    for column in categorical_columns:
+
+        # Crosstab كتحسب النسب حسب كل catégorie
+        cross_table = pd.crosstab(
+            df[column],
+            df[target],
+            normalize="index"
+        ) * 100
+
+        print(
+            f"\n===== {column} vs {target} ====="
+        )
+
+        print(
+            cross_table.round(2)
+        )
+
+        # كنرسمو النسب
+        cross_table.plot(
+            kind="bar",
+            stacked=True,
+            figsize=(10, 5)
+        )
+
+        plt.title(
+            f"{target} selon {column}"
+        )
+
+        plt.xlabel(column)
+        plt.ylabel("Pourcentage")
+
+        plt.xticks(rotation=45)
+
+        plt.legend(
+            title=target
+        )
+
+        plt.tight_layout()
+        plt.show()
