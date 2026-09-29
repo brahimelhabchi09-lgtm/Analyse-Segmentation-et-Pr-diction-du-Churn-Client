@@ -198,3 +198,21 @@ def remove_identifier(df):
         print("\ncustomerID supprimée.")
 
     return df
+
+
+# ============================================================
+# 8. VARIABLES NUMÉRIQUES
+# ============================================================
+
+def get_numeric_columns(df):
+    # كنجيبو جميع variables numériques
+    numeric_columns = df.select_dtypes(
+        include=np.number
+    ).columns.tolist()
+
+    # Churn ماشي feature
+    # إلا كانت داخلة نحيدوها
+    if "Churn" in numeric_columns:
+        numeric_columns.remove("Churn")
+
+    return numeric_columns
