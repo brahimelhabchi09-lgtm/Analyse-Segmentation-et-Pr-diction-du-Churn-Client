@@ -182,3 +182,19 @@ def remove_duplicates(df):
     print(f"Doublons supprimés : {before - after}")
 
     return df
+
+
+# ============================================================
+# 7. SUPPRIMER IDENTIFIANT
+# ============================================================
+
+def remove_identifier(df):
+    # customerID غير identifier
+    # ما عندها حتى معنى بالنسبة للموديل
+    # لذلك غادي نحيدوها
+    if "customerID" in df.columns:
+        df = df.drop(columns=["customerID"])
+
+        print("\ncustomerID supprimée.")
+
+    return df
