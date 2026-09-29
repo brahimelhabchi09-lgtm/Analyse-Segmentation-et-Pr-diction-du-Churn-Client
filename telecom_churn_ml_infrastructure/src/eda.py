@@ -617,3 +617,34 @@ def create_features(df):
         )
 
     return df
+
+
+# ============================================================
+# 19. SAVE DATASET
+# ============================================================
+
+def save_processed_data(
+    df,
+    output_path
+):
+    # كنخلقو dossier إلا ما كانش موجود
+    directory = os.path.dirname(
+        output_path
+    )
+
+    if directory:
+        os.makedirs(
+            directory,
+            exist_ok=True
+        )
+
+    # كنحفظو dataset processed
+    df.to_csv(
+        output_path,
+        index=False
+    )
+
+    print(
+        f"\nDataset sauvegardé dans : "
+        f"{output_path}"
+    )
