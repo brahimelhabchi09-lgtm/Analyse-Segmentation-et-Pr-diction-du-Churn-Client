@@ -308,3 +308,59 @@ def plot_boxplots(
 
         plt.tight_layout()
         plt.show()
+
+
+# ============================================================
+# 12. DETECTION OUTLIERS IQR
+# ============================================================
+
+def detect_outliers_iqr(
+    df,
+    numeric_columns
+):
+    # هنا غادي نجمعو نتائج outliers
+    results = []
+
+    for column in numeric_columns:
+
+        # Q1 = 25%
+        q1 = df[column].quantile(0.25)
+
+        # Q3 = 75%
+        q3 = df[column].quantile(0.75)
+
+        # IQR = Q3 - Q1
+        iqr = q3 - q1
+
+        # الحد السفلي
+        lower_bound = q1 - 1.5 * iqr
+
+        # الحد العلوي
+        upper_bound = q3 + 1.5 * iqr
+
+        # القيم اللي خارج الحدود
+        outliers = df[
+            (df[column] < lower_bound) |
+            (df[column] > upper_bound)
+        ]
+
+        results.append({
+            "variable": column,
+            "Q1": q1,
+            "Q3": q3,
+            "IQR": iqr,
+            "lower_bound": lower_bound,
+            "upper_bound": upper_bound,
+            "outliers_count": len(outliers),
+            "outliers_percent": round(
+                len(outliers) / len(df) * 100,
+                2
+            )
+        })
+
+    result = pd.DataFrame(results)
+
+    print("\n===== OUTLIERS IQR =====")
+    print(result)
+
+    return result
