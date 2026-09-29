@@ -475,3 +475,35 @@ def analyze_target(
     plt.ylabel("Nombre de clients")
 
     plt.show()
+
+
+# ============================================================
+# 16. VARIABLES NUMÉRIQUES VS CHURN
+# ============================================================
+
+def analyze_numeric_vs_target(
+    df,
+    numeric_columns,
+    target="Churn"
+):
+    # كنشوفو كيفاش variables numériques
+    # كيتوزعو حسب Churn
+    for column in numeric_columns:
+
+        plt.figure(figsize=(8, 5))
+
+        sns.boxplot(
+            data=df,
+            x=target,
+            y=column
+        )
+
+        plt.title(
+            f"{column} selon {target}"
+        )
+
+        plt.xlabel(target)
+        plt.ylabel(column)
+
+        plt.tight_layout()
+        plt.show()
