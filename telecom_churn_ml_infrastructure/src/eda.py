@@ -280,3 +280,31 @@ def plot_numeric_distributions(
 
         plt.tight_layout()
         plt.show()
+
+
+# ============================================================
+# 11. BOXPLOTS
+# ============================================================
+
+def plot_boxplots(
+    df,
+    numeric_columns
+):
+    # Boxplot كيساعدنا نكتاشفو outliers
+    for column in numeric_columns:
+
+        plt.figure(figsize=(8, 4))
+
+        sns.boxplot(
+            data=df,
+            x=column
+        )
+
+        plt.title(
+            f"Boxplot - {column}"
+        )
+
+        plt.xlabel(column)
+
+        plt.tight_layout()
+        plt.show()
