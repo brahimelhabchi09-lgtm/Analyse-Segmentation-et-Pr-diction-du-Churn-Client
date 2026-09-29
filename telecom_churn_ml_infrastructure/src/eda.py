@@ -648,3 +648,147 @@ def save_processed_data(
         f"\nDataset sauvegardé dans : "
         f"{output_path}"
     )
+
+
+# ============================================================
+# 20. FUNCTION PRINCIPALE EDA
+# ============================================================
+
+def run_eda(
+    input_path,
+    output_path,
+    target="Churn"
+):
+    # البداية
+    print("=" * 60)
+    print("START EDA")
+    print("=" * 60)
+
+    # 1. تحميل البيانات
+    df = load_data(
+        input_path
+    )
+
+    # 2. تصحيح types
+    df = convert_data_types(
+        df
+    )
+
+    # 3. معلومات عامة
+    show_basic_information(
+        df
+    )
+
+    # 4. statistiques
+    show_statistics(
+        df
+    )
+
+    # 5. missing values
+    check_missing_values(
+        df
+    )
+
+    plot_missing_values(
+        df
+    )
+
+    # 6. doublons
+    check_duplicates(
+        df
+    )
+
+    df = remove_duplicates(
+        df
+    )
+
+    # 7. نحيدو customerID
+    df = remove_identifier(
+        df
+    )
+
+    # 8. types ديال variables
+    numeric_columns, categorical_columns = (
+        show_column_types(df)
+    )
+
+    # 9. distributions numériques
+    plot_numeric_distributions(
+        df,
+        numeric_columns
+    )
+
+    # 10. boxplots
+    plot_boxplots(
+        df,
+        numeric_columns
+    )
+
+    # 11. detection outliers
+    detect_outliers_iqr(
+        df,
+        numeric_columns
+    )
+
+    # 12. distributions catégorielles
+    plot_categorical_distributions(
+        df,
+        categorical_columns
+    )
+
+    # 13. correlation
+    plot_correlation_matrix(
+        df,
+        numeric_columns
+    )
+
+    # 14. analyse Churn
+    if target in df.columns:
+
+        analyze_target(
+            df,
+            target
+        )
+
+        analyze_numeric_vs_target(
+            df,
+            numeric_columns,
+            target
+        )
+
+        analyze_categorical_vs_target(
+            df,
+            categorical_columns,
+            target
+        )
+
+    # 15. Feature Engineering
+    df = create_features(
+        df
+    )
+
+    # 16. sauvegarde
+    save_processed_data(
+        df,
+        output_path
+    )
+
+    print("\n" + "=" * 60)
+    print("EDA TERMINÉE")
+    print("=" * 60)
+
+    return df
+
+
+# ============================================================
+# 21. EXECUTION
+# ============================================================
+
+if __name__ == "__main__":
+
+    # كنشغلو EDA كاملة
+    run_eda(
+        input_path="../data/raw/telecom_churn.csv",
+        output_path="../data/processed/telecom_churn_clean.csv",
+        target="Churn"
+    )
