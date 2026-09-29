@@ -73,3 +73,78 @@ def show_statistics(df):
     # statistiques ديال جميع variables
     print("\n===== STATISTIQUES COMPLETES =====")
     print(df.describe(include="all"))
+
+
+# ============================================================
+# 5. VALEURS MANQUANTES
+# ============================================================
+
+def check_missing_values(df):
+    # كنحسبو عدد القيم الناقصة
+    missing = df.isnull().sum()
+
+    # كنحسبو النسبة المئوية
+    missing_percent = (
+        df.isnull().sum() / len(df) * 100
+    ).round(2)
+
+    # كنصايبو DataFrame فيه النتائج
+    result = pd.DataFrame({
+        "missing_count": missing,
+        "missing_percent": missing_percent
+    })
+
+    # كنخليو غير الأعمدة اللي فيهم missing
+    result = result[
+        result["missing_count"] > 0
+    ]
+
+    result = result.sort_values(
+        by="missing_count",
+        ascending=False
+    )
+
+    print("\n===== VALEURS MANQUANTES =====")
+
+    if result.empty:
+        print("Aucune valeur manquante.")
+
+    else:
+        print(result)
+
+    return result
+
+
+def plot_missing_values(df, save_path=None):
+    # كنحسبو missing values
+    missing = (
+        df.isnull()
+        .sum()
+        .sort_values(ascending=False)
+    )
+
+    missing = missing[missing > 0]
+
+    if missing.empty:
+        print("Aucune valeur manquante.")
+        return
+
+    # كنرسمو graphique
+    plt.figure(figsize=(10, 5))
+
+    sns.barplot(
+        x=missing.index,
+        y=missing.values
+    )
+
+    plt.title("Valeurs manquantes")
+    plt.xlabel("Variables")
+    plt.ylabel("Nombre")
+    plt.xticks(rotation=45)
+
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path)
+
+    plt.show()
