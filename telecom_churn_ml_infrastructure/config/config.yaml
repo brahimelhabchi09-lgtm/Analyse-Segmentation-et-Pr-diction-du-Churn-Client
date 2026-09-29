@@ -1,0 +1,21 @@
+project:
+  name: telecom_churn_ml
+  target: churn
+
+paths:
+  raw_data: data/raw/telecom_churn.csv
+  processed_data: data/processed
+  models: models
+  artifacts: artifacts
+
+mlflow:
+  tracking_uri: http://mlflow:5000
+  experiment_name: telecom_churn
+
+clustering:
+  random_state: 42
+  max_k: 10
+
+classification:
+  test_size: 0.2
+  random_state: 42
