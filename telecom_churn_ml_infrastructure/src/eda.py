@@ -216,3 +216,37 @@ def get_numeric_columns(df):
         numeric_columns.remove("Churn")
 
     return numeric_columns
+
+
+# ============================================================
+# 9. VARIABLES CATÉGORIELLES
+# ============================================================
+
+def get_categorical_columns(df):
+    # كنجيبو variables catégorielles
+    categorical_columns = df.select_dtypes(
+        include=["object", "category", "bool"]
+    ).columns.tolist()
+
+    # Churn هي target
+    # لذلك ما خاصهاش تكون ضمن features
+    if "Churn" in categorical_columns:
+        categorical_columns.remove("Churn")
+
+    return categorical_columns
+
+
+def show_column_types(df):
+    # كنجيبو numeric variables
+    numeric_columns = get_numeric_columns(df)
+
+    # كنجيبو categorical variables
+    categorical_columns = get_categorical_columns(df)
+
+    print("\n===== VARIABLES NUMÉRIQUES =====")
+    print(numeric_columns)
+
+    print("\n===== VARIABLES CATÉGORIELLES =====")
+    print(categorical_columns)
+
+    return numeric_columns, categorical_columns
