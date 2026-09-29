@@ -364,3 +364,34 @@ def detect_outliers_iqr(
     print(result)
 
     return result
+
+
+# ============================================================
+# 13. DISTRIBUTION VARIABLES CATÉGORIELLES
+# ============================================================
+
+def plot_categorical_distributions(
+    df,
+    categorical_columns
+):
+    # كنرسمو عدد clients فكل catégorie
+    for column in categorical_columns:
+
+        plt.figure(figsize=(10, 5))
+
+        sns.countplot(
+            data=df,
+            x=column
+        )
+
+        plt.title(
+            f"Distribution de {column}"
+        )
+
+        plt.xlabel(column)
+        plt.ylabel("Nombre")
+
+        plt.xticks(rotation=45)
+
+        plt.tight_layout()
+        plt.show()
