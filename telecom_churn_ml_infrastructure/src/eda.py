@@ -59,3 +59,17 @@ def show_basic_information(df):
     # info() كتعطينا معلومات عامة
     print("\n===== INFO =====")
     df.info()
+
+
+# ============================================================
+# 4. STATISTIQUES
+# ============================================================
+
+def show_statistics(df):
+    # statistiques ديال variables numériques
+    print("\n===== STATISTIQUES NUMÉRIQUES =====")
+    print(df.describe())
+
+    # statistiques ديال جميع variables
+    print("\n===== STATISTIQUES COMPLETES =====")
+    print(df.describe(include="all"))
