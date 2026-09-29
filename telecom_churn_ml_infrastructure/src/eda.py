@@ -558,3 +558,62 @@ def analyze_categorical_vs_target(
 
         plt.tight_layout()
         plt.show()
+
+
+# ============================================================
+# 18. FEATURE ENGINEERING
+# ============================================================
+
+def create_features(df):
+    # كنخدمو على copy باش ما نبدلوش raw dataset
+    df = df.copy()
+
+    # متوسط المصاريف الشهرية
+    # هنا TotalCharges أصلا مجموع المصاريف
+    # و tenure هو عدد الشهور
+    if {
+        "TotalCharges",
+        "tenure"
+    }.issubset(df.columns):
+
+        df["AverageMonthlySpend"] = (
+            df["TotalCharges"] /
+            df["tenure"].replace(
+                0,
+                np.nan
+            )
+        )
+
+    # واش client عندو internet
+    if "InternetService" in df.columns:
+
+        df["HasInternet"] = (
+            df["InternetService"] != "No"
+        ).astype(int)
+
+    # عدد services الإضافية اللي client مشترك فيها
+    service_columns = [
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies"
+    ]
+
+    existing_services = [
+        column
+        for column in service_columns
+        if column in df.columns
+    ]
+
+    if existing_services:
+
+        # كنحسبو عدد الخدمات اللي عند client
+        df["NumberOfServices"] = (
+            df[existing_services]
+            .eq("Yes")
+            .sum(axis=1)
+        )
+
+    return df
