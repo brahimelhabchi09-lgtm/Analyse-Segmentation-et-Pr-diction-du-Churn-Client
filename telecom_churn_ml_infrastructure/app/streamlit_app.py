@@ -10,6 +10,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from src.clustering import cluster_customers
+from src.classification import compare_churn_models
 
 st.set_page_config(
     page_title="Telecom Churn Prediction",
@@ -18,33 +19,19 @@ st.set_page_config(
 )
 
 st.title("Telecom Customer Churn Prediction")
-st.write("Infrastructure Streamlit prête pour le modèle de Machine Learning.")
-
-st.info(
-    "Ajoutez votre modèle entraîné dans le dossier models/ "
-    "puis connectez-le à cette interface."
-)
-
-st.subheader("Infrastructure")
-st.write("• Streamlit : application")
-st.write("• MLflow : suivi des expériences")
-st.write("• PostgreSQL : stockage des métadonnées MLflow")
-st.write("• Docker : conteneurisation")
+data_path = Path(__file__).resolve().parents[1] / "data" / "raw" / "telecom_churn.csv"
+uploaded_file = st.file_uploader("Charger un fichier CSV", type="csv")
+if uploaded_file is not None:
+    customers = pd.read_csv(uploaded_file)
+elif data_path.exists():
+    customers = pd.read_csv(data_path)
+else:
+    st.warning("Chargez un fichier CSV pour commencer.")
+    st.stop()
 
 
-def render_clustering():
+def render_clustering(customers):
     st.header("Segmentation des clients")
-    data_path = Path(__file__).resolve().parents[1] / "data" / "raw" / "telecom_churn.csv"
-    uploaded_file = st.file_uploader("Charger un fichier CSV", type="csv")
-
-    if uploaded_file is not None:
-        customers = pd.read_csv(uploaded_file)
-    elif data_path.exists():
-        customers = pd.read_csv(data_path)
-    else:
-        st.warning("Chargez un fichier CSV pour commencer.")
-        return
-
     st.caption(
         f"{len(customers):,} clients. La cible churn et les identifiants sont exclus des variables de clustering."
     )
@@ -139,4 +126,131 @@ def render_clustering():
     )
 
 
-render_clustering()
+def render_classification(customers):
+    st.header("Prédiction du churn")
+    st.caption(
+        "Les cinq modèles utilisent le même découpage stratifié. "
+        "Imputation, standardisation et suréchantillonnage sont ajustés sur l'entraînement uniquement."
+    )
+
+    clustering_result = st.session_state.get("clustering_result")
+    cluster_available = False
+    if clustering_result is not None:
+        clustered_customers = clustering_result["assignments"].drop(
+            columns=["cluster"], errors="ignore"
+        )
+        cluster_available = clustered_customers.reset_index(drop=True).equals(
+            customers.reset_index(drop=True)
+        )
+        if not cluster_available:
+            st.warning(
+                "Le résultat de segmentation ne correspond pas au fichier courant. "
+                "Relancez la segmentation pour comparer avec le cluster."
+            )
+
+    include_cluster = st.checkbox(
+        "Comparer aussi avec les variables initiales + cluster",
+        value=cluster_available,
+        disabled=not cluster_available,
+    )
+    imbalance_method = st.selectbox(
+        "Gestion du déséquilibre des classes",
+        ["Suréchantillonnage aléatoire", "Aucune"],
+    )
+    method = "random_oversampling" if imbalance_method == "Suréchantillonnage aléatoire" else "none"
+    test_size = st.slider("Part réservée au test", 0.1, 0.4, 0.2, 0.05)
+
+    if st.button("Entraîner et comparer les modèles", type="primary"):
+        model_data = customers.copy()
+        cluster_column = None
+        if include_cluster and cluster_available:
+            model_data["cluster"] = clustering_result["assignments"]["cluster"].to_numpy()
+            cluster_column = "cluster"
+        with st.spinner("Entraînement et évaluation des modèles..."):
+            try:
+                st.session_state["classification_result"] = compare_churn_models(
+                    model_data,
+                    cluster_column=cluster_column,
+                    test_size=test_size,
+                    imbalance_method=method,
+                )
+                st.session_state["classification_has_cluster"] = cluster_column is not None
+                st.session_state["classification_source"] = customers.reset_index(drop=True)
+            except (ValueError, TypeError) as error:
+                st.error(f"Impossible d'entraîner les modèles : {error}")
+
+    result = st.session_state.get("classification_result")
+    result_source = st.session_state.get("classification_source")
+    if result is not None and (
+        result_source is None
+        or not result_source.equals(customers.reset_index(drop=True))
+    ):
+        result = None
+    if result is None:
+        return
+
+    metrics = result["metrics"]
+    st.subheader("Performances sur le jeu de test")
+    st.dataframe(
+        metrics.sort_values(["Variables", "F1-score"], ascending=[True, False]).style.format(
+            {"Precision": "{:.3f}", "Recall": "{:.3f}", "F1-score": "{:.3f}", "ROC-AUC": "{:.3f}"}
+        ),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    if st.session_state.get("classification_has_cluster"):
+        f1_comparison = metrics.pivot(
+            index="Modèle", columns="Variables", values="F1-score"
+        )
+        auc_comparison = metrics.pivot(
+            index="Modèle", columns="Variables", values="ROC-AUC"
+        )
+        expected_sets = {"Variables initiales", "Variables initiales + cluster"}
+        if expected_sets.issubset(f1_comparison.columns) and expected_sets.issubset(
+            auc_comparison.columns
+        ):
+            comparison = pd.DataFrame(
+                {
+                    "Gain F1 avec cluster": (
+                        f1_comparison["Variables initiales + cluster"]
+                        - f1_comparison["Variables initiales"]
+                    ),
+                    "Gain ROC-AUC avec cluster": (
+                        auc_comparison["Variables initiales + cluster"]
+                        - auc_comparison["Variables initiales"]
+                    ),
+                }
+            )
+            st.subheader("Effet de la segmentation")
+            st.dataframe(
+                comparison.sort_values("Gain F1 avec cluster", ascending=False).style.format("{:.3f}"),
+                use_container_width=True,
+            )
+
+    st.subheader("Matrices de confusion")
+    model_names = metrics["Modèle"].drop_duplicates().tolist()
+    selected_model = st.selectbox("Modèle à examiner", model_names)
+    selected_matrices = [
+        (feature_set, result["confusion_matrices"][(selected_model, feature_set)])
+        for feature_set in metrics.loc[metrics["Modèle"] == selected_model, "Variables"].unique()
+    ]
+    matrix_columns = st.columns(len(selected_matrices))
+    for column, (feature_set, matrix) in zip(matrix_columns, selected_matrices):
+        with column:
+            st.caption(feature_set)
+            st.dataframe(
+                pd.DataFrame(
+                    matrix,
+                    index=["Réel : non-churn", "Réel : churn"],
+                    columns=["Prédit : non-churn", "Prédit : churn"],
+                ),
+                use_container_width=True,
+            )
+
+
+segmentation_tab, classification_tab = st.tabs(["Segmentation", "Classification"])
+with segmentation_tab:
+    render_clustering(customers)
+with classification_tab:
+    render_classification(customers)
