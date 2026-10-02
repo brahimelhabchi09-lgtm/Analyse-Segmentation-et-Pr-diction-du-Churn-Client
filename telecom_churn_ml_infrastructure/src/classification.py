@@ -47,22 +47,24 @@ def _encode_target(target):
     return (values == positive_class).astype(int).to_numpy()
 
 
-def _prepare_features(features, cluster_column=None):
+def _prepare_features(features, cluster_column=None, reference_features=None):
     prepared = features.copy()
+    reference = features if reference_features is None else reference_features
     numeric_cluster = cluster_column if cluster_column in prepared.columns else None
     if numeric_cluster is not None:
         prepared[numeric_cluster] = prepared[numeric_cluster].astype("string")
 
-    for column in prepared.select_dtypes(include=["object", "string"]).columns:
+    for column in reference.select_dtypes(include=["object", "string"]).columns:
         if column == numeric_cluster:
             continue
-        stripped = prepared[column].astype("string").str.strip()
+        stripped = reference[column].astype("string").str.strip()
         nonempty = stripped.notna() & stripped.ne("")
         converted = pd.to_numeric(stripped, errors="coerce")
         if nonempty.any() and converted[nonempty].notna().all():
-            prepared[column] = converted
+            prepared[column] = pd.to_numeric(prepared[column], errors="coerce")
 
-    prepared = prepared.dropna(axis=1, how="all")
+    empty_columns = reference.columns[reference.isna().all()]
+    prepared = prepared.drop(columns=empty_columns)
     numeric_columns = prepared.select_dtypes(include=np.number).columns.tolist()
     categorical_columns = [
         column for column in prepared.columns if column not in numeric_columns
@@ -167,9 +169,11 @@ def compare_churn_models(
         )
 
     for feature_set_name, selected_columns in feature_sets:
+        raw_features = usable[selected_columns]
         prepared, preprocessor = _prepare_features(
-            usable[selected_columns],
+            raw_features,
             cluster_column=cluster_column if cluster_column in selected_columns else None,
+            reference_features=raw_features.iloc[train_indices],
         )
         for model_name, make_model in model_factories.items():
             sampler = (
